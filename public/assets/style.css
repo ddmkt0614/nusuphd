@@ -765,3 +765,22 @@ a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{o
 .field-photo{margin:0;max-width:880px}
 .field-photo img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--r-lg)}
 .field-photo figcaption{margin-top:10px;font-size:var(--fs-sm);color:var(--ink-3)}
+
+/* 동·역 주변 지도(실제 행정동 경계, 인라인 SVG) */
+.dongmap{display:block;width:100%;height:auto;border-radius:var(--r-card);background:#f6f1e6}
+.dm-dong{fill:#efe6d3;stroke:#fffaf0;stroke-width:1.4;stroke-linejoin:round}
+.dm-target{fill:#0a0a0a;stroke:#fffaf0;stroke-width:1.6}
+.dm-here{fill:#e3d6ba;stroke:#fffaf0;stroke-width:1.6}
+.dm-item rect{fill:#fff;stroke:#e2d9c4}
+.dm-item text{font:500 11.5px var(--font);fill:#6a6a6a}
+.dm-item .dm-name{fill:#0a0a0a}
+.dm-item:hover rect{stroke:#0a0a0a}
+.dm-center rect{fill:#fff;stroke:#0a0a0a;stroke-width:1.5}
+.dm-center text{font:500 13px var(--font);fill:#0a0a0a}
+.dm-scale path{stroke:#0a0a0a;stroke-width:2}
+.dm-scale text,.dm-north text{font:500 10px var(--font);fill:#3a3a3a}
+.dm-north path{fill:#0a0a0a}
+.dm-credit{margin:10px 2px 0;font-size:.75rem;line-height:1.5;color:var(--ink-3)}
+.dm-credit a{color:inherit}
+.dm-lead{stroke:#0a0a0a;stroke-width:1;stroke-dasharray:2 2;opacity:.5}
+.dm-pt{fill:#0a0a0a}
