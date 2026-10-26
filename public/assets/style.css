@@ -803,3 +803,9 @@ a:hover .dm-name,a:hover .dm-stn{text-decoration:underline}
 .case-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--r-card)}
 .case-grid figcaption{margin-top:8px;font-size:var(--fs-sm);color:var(--ink-3)}
 @media (max-width:520px){.case-grid{gap:10px}}
+
+/* 동 페이지 본문 원고 */
+.article-body{max-width:780px}
+.article-body h2{font-size:var(--fs-h3);line-height:var(--lh-h3);letter-spacing:var(--ls-h3);margin:44px 0 14px}
+.article-body h2:first-child{margin-top:0}
+.article-body p{font-size:1.0625rem;line-height:1.8;margin:0 0 14px;color:var(--ink-2)}
