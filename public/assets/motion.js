@@ -143,7 +143,7 @@
   });
 
   /* 8. 숫자 카운터 (한 번만, 글자 폭 고정) */
-  $(".hero-area span, .hero-area b, .finder-tab small, .region-grid span").slice(0, 120).forEach(function (el) {
+  $(".hero-area span, .hero-area b, .region-grid span").slice(0, 120).forEach(function (el) {
     var node = el.firstChild;
     if (!node || node.nodeType !== 3 || !/\d/.test(node.nodeValue)) return;
     var text = node.nodeValue, nums = text.match(/\d+/g).map(Number), obj = { p: 0 };
@@ -166,6 +166,11 @@
     }
     var cur = tabs.querySelector('[aria-pressed="true"]');
     if (cur) place(cur);
+    /* 웹 글꼴이 늦게 오면 탭 폭이 바뀌므로 글꼴 로드 뒤·창 크기 변화 때 다시 맞춤 */
+    function replace() { var a = tabs.querySelector('[aria-pressed="true"]'); if (a) place(a); }
+    if (document.fonts) document.fonts.ready.then(replace);
+    addEventListener("load", replace);
+    if (window.ResizeObserver) { var ro = new ResizeObserver(replace); $(".finder-tab", tabs).forEach(function (t) { ro.observe(t); }); }
     addEventListener("resize", function () { var a = tabs.querySelector('[aria-pressed="true"]'); if (a) place(a); });
     $(".finder-tab", tabs).forEach(function (b) {
       b.addEventListener("click", function () {
