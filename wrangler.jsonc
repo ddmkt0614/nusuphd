@@ -4,21 +4,16 @@
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
   "preview_urls": false,
+  // GitHub(main) 에 올리면 Cloudflare Workers Builds 가 npx wrangler deploy 로 자동 배포
+  "routes": [
+    { "pattern": "nusuphd.com", "custom_domain": true },
+    { "pattern": "www.nusuphd.com", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
     "run_worker_first": true,
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page"
-  },
-  // nusuphd.com 이 Cloudflare 계정에 존(zone)으로 추가된 뒤에만 deploy-domain.ps1 (--env production) 사용
-  "env": {
-    "production": {
-      "name": "nusuphd",
-      "routes": [
-        { "pattern": "nusuphd.com", "custom_domain": true },
-        { "pattern": "www.nusuphd.com", "custom_domain": true }
-      ]
-    }
   }
 }
