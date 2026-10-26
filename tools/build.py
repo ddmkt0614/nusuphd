@@ -53,6 +53,10 @@ def apply(page, P):
     faq = "".join(f"<details><summary>{esc(fill(q))}</summary><p>{esc(fill(a))}</p></details>" for q, a in P["faq"])
     s = re.sub(r'<section class="block block-faq">.*?</section>',
                f'<section class="block block-faq"><div class="wrap"><h2 class="block-title">{esc(F)} 자주 묻는 질문</h2><div class="faq">{faq}</div></div></section>', s, count=1, flags=re.S)
+    # 자주 묻는 질문은 맨 아래(상담 띠 바로 위)로
+    m = re.search(r'<section class="block block-faq">.*?</section>', s, re.S)
+    faq_html = m.group(0); s = s[:m.start()] + s[m.end():]
+    i = s.index('<section class="callout">'); s = s[:i] + faq_html + s[i:]
     # 서비스: 동 이름 빼기
     s = re.sub(r'(<section class="block block-services"><div class="wrap"><h2 class="block-title">)[^<]*(</h2>)', r"\1함께 많이 찾는 서비스\2", s, count=1)
     def svc(m): return re.sub(r"<strong>(?:\S+ )?%s ([^<]*)</strong>" % re.escape(D), r"<strong>\1</strong>", m.group(0))
