@@ -784,3 +784,15 @@ a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{o
 .dm-credit a{color:inherit}
 .dm-lead{stroke:#0a0a0a;stroke-width:1;stroke-dasharray:2 2;opacity:.5}
 .dm-pt{fill:#0a0a0a}
+/* 지도 v2 — 저스트 방식(회색 바탕·흰 경계·파스텔 면·굵은 동 이름·회색 구 이름) */
+.dm-bg{fill:#f1f1ec}
+.dm-dong{fill:#f1f1ec;stroke:#fff;stroke-width:1.3;stroke-linejoin:round}
+.dm-area{stroke:#fff;stroke-width:1.5;stroke-linejoin:round}
+.dm-name{font:600 15px var(--font);fill:#0a0a0a;text-anchor:middle;paint-order:stroke;stroke:rgba(255,255,255,.55);stroke-width:3px}
+.dm-main{font-size:17px}
+.dm-sgg{font:500 12px var(--font);fill:#9a9a94;text-anchor:middle}
+.dm-stn{font:500 11.5px var(--font);fill:#3a3a3a;paint-order:stroke;stroke:#f1f1ec;stroke-width:3px}
+.dm-st{stroke:#fff;stroke-width:2}
+.dm-here-pt{fill:#0a0a0a;stroke:#fff;stroke-width:3}
+a:hover .dm-name,a:hover .dm-stn{text-decoration:underline}
+.dongmap-fig .dongmap{background:#f1f1ec}
