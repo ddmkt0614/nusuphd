@@ -191,7 +191,7 @@
   $('.region-grid[data-panel="seoul"] strong, .region-grid[data-panel="gyeonggi"] strong').forEach(function (s) {
     var n = s.textContent.split(" ")[1]; if (n && names.indexOf(n) < 0) names.push(n);
   });
-  if (hero && names.length) {
+  if (hero && names.length >= 8) {  /* 공개 지역이 적을 땐 띠를 띄우지 않음 */
     var band = document.createElement("div");
     band.className = "marquee"; band.setAttribute("aria-hidden", "true");
     var track = document.createElement("div");
