@@ -10,8 +10,11 @@ const cases = [
   // 옛 영문 주소 → 한글 주소(한 번에)
   ["https://nusuphd.com/area/seoul/jongno/gahoe-dong/", 301, enc("/서울-종로구-가회동-누수탐지/")],
   ["http://www.nusuphd.com/area/seoul/jongno/gahoe-dong", 301, enc("/서울-종로구-가회동-누수탐지/")],
-  ["https://nusuphd.com/area/seoul/jongno/index.html", 301, enc("/서울-종로구-누수탐지/")],
-  ["https://nusuphd.com/station/gangnam-station/?q=1", 301, enc("/강남역-누수탐지/") + "?q=1"],
+  ["https://nusuphd.com/area/seoul/gwangjin/hwayang-dong/index.html", 301, enc("/서울-광진구-화양동-누수탐지/")],
+  ["https://nusuphd.com/area/seoul/gwangjin/hwayang-dong/?q=1", 301, enc("/서울-광진구-화양동-누수탐지/") + "?q=1"],
+  // 아직 보관 중인 페이지의 옛 주소는 옮기지 않음(정적 파일 → 404 페이지)
+  ["https://nusuphd.com/area/seoul/jongno/", 200, null],
+  ["https://nusuphd.com/station/gangnam-station/", 200, null],
   ["https://nusuphd.com/area/", 200, null],
   ["https://nusuphd.com/" + encodeURI("서울-종로구-가회동-누수탐지") + "/", 200, null],
 ];
