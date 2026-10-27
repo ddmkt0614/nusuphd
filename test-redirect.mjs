@@ -1,5 +1,11 @@
-﻿import worker from "./src/index.js";
-const env = { ASSETS: { fetch: () => new Response("asset") } };
+import worker from "./src/index.js";
+let lastAsset = "";
+// 정적 파일 흉내: 끝 슬래시 없는 폴더 주소는 307 로 슬래시 붙이기
+const env = { ASSETS: { fetch: (req) => {
+  const u = new URL(req.url); lastAsset = u.pathname;
+  if (u.pathname === "/_sub/nowon/x") return new Response(null, { status: 307, headers: { location: "/_sub/nowon/x/" } });
+  return new Response("asset");
+} } };
 const enc = (p) => "https://nusuphd.com" + encodeURI(p);
 const cases = [
   ["http://nusuphd.com/about/", 301, "https://nusuphd.com/about/"],
@@ -17,9 +23,21 @@ const cases = [
   ["https://nusuphd.com/station/gangnam-station/", 200, null],
   ["https://nusuphd.com/area/", 200, null],
   ["https://nusuphd.com/" + encodeURI("서울-종로구-가회동-누수탐지") + "/", 200, null],
+  // 하위 주소 사이트(nowon)
+  ["https://nowon.nusuphd.com/", 200, null, "/_sub/nowon/"],
+  ["https://nowon.nusuphd.com/" + encodeURI("서울-노원구-공릉동-누수탐지") + "/", 200, null, "/_sub/nowon/" + encodeURI("서울-노원구-공릉동-누수탐지") + "/"],
+  ["https://nowon.nusuphd.com/assets/style.css", 200, null, "/assets/style.css"],
+  ["https://nowon.nusuphd.com/x", 307, "https://nowon.nusuphd.com/x/"],
+  ["http://nowon.nusuphd.com/a/?q=1", 301, "https://nowon.nusuphd.com/a/?q=1"],
+  ["https://nusuphd.com/_sub/nowon/", 200, null, "/__none__/"],
+  ["https://nusuphd.com/area/seoul/nowon/gongreung-dong/?q=1", 301, "https://nowon.nusuphd.com/" + encodeURI("서울-노원구-공릉동-누수탐지") + "/?q=1"],
+  ["https://nusuphd.com/" + encodeURI("서울-노원구-누수탐지") + "/", 301, "https://nowon.nusuphd.com/"],
+  ["https://other.nusuphd.com/", 200, null],
 ];
-for (const [u, st, loc] of cases) {
+for (const [u, st, loc, asset] of cases) {
+  lastAsset = "";
   const r = await worker.fetch(new Request(u), env);
   if (r.status !== st || (loc && r.headers.get("location") !== loc)) throw new Error(`FAIL ${u} ${r.status} ${r.headers.get("location")}`);
+  if (asset && lastAsset !== asset) throw new Error(`FAIL ${u} asset ${lastAsset}`);
 }
 console.log("redirect checks ok");

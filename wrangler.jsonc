@@ -7,7 +7,8 @@
   // GitHub(main) 에 올리면 Cloudflare Workers Builds 가 npx wrangler deploy 로 자동 배포
   "routes": [
     { "pattern": "nusuphd.com", "custom_domain": true },
-    { "pattern": "www.nusuphd.com", "custom_domain": true }
+    { "pattern": "www.nusuphd.com", "custom_domain": true },
+    { "pattern": "nowon.nusuphd.com", "custom_domain": true }
   ],
   "assets": {
     "directory": "./public",

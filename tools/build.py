@@ -1,4 +1,5 @@
-"""공개 동 페이지 6곳에 원고 적용 + 키워드 횟수 검사.  python build.py <public> [--check]"""
+"""공개 동 페이지(와 하위 주소 사이트의 구 첫 화면)에 원고 적용 + 키워드 횟수 검사.  python build.py <public> [--check]
+구 첫 화면은 PAGES 의 D=None, 키 = public 기준 폴더(예: _sub/nowon)."""
 import sys, re, json, html, pathlib
 sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
@@ -7,6 +8,8 @@ from pages import PAGES
 pub = pathlib.Path(sys.argv[1]); CHECK = "--check" in sys.argv
 TARGET = {"S": (30, 30), "G": (30, 30), "D": (30, 30), "누수탐지": (35, 37), "누수": (40, 50),
           "S G": (30, 30), "G D": (27, 30), "D 누수탐지": (25, 25), "G D 누수탐지": (25, 25), "S G D 누수탐지": (25, 25)}
+TARGET_GU = {"S": (30, 30), "G": (30, 30), "누수탐지": (35, 37), "누수": (40, 50), "S G": (30, 30), "G 누수탐지": (25, 25), "S G 누수탐지": (25, 25)}
+def targets(P): return TARGET if P["D"] else TARGET_GU
 
 def main_text(s):
     m = s[s.find("<main>"):s.find("</main>")]
@@ -14,17 +17,14 @@ def main_text(s):
     m = re.sub(r"<[^>]+>", " ", m)
     return re.sub(r"\s+", " ", html.unescape(m)).strip()
 
-def counts(txt, S, G, D):
-    out = {}
-    for k in TARGET:
-        out[k] = txt.count(k.replace("S", S, 1).replace("G", G, 1).replace("D", D, 1) if k not in ("누수탐지", "누수") else k)
-    return out
+def label(k, S, G, D): return k if k in ("누수탐지", "누수") else k.replace("S", S, 1).replace("G", G, 1).replace("D", D or "", 1)
+def counts(txt, P): return {k: txt.count(label(k, P["S"], P["G"], P["D"])) for k in targets(P)}
 
 def esc(t): return html.escape(t, quote=False)
 
 def apply(page, P):
     S, G, D = P["S"], P["G"], P["D"]
-    F, SGD, SG = f"{S} {G} {D} 누수탐지", f"{S} {G} {D}", f"{S} {G}"
+    SG = f"{S} {G}"; SGD = f"{SG} {D}" if D else SG; F = f"{SGD} 누수탐지"
     fill = lambda t: t.replace("{F}", F).replace("{SGD}", SGD).replace("{SG}", SG)
     p = pub / page / "index.html"; s = p.read_text(encoding="utf-8")
     # 첫 화면
@@ -44,8 +44,12 @@ def apply(page, P):
     s = re.sub(r'<div><dt>위치</dt><dd>.*?</dd></div>', f'<div><dt>위치</dt><dd>{esc(fill(P["where"]))}</dd></div>', s, count=1, flags=re.S)
     # 증상
     s = re.sub(r'(<section class="block block-signs"><div class="wrap"><h2 class="block-title">)[^<]*(</h2>)', lambda m: m.group(1) + esc(fill(P["signs"])) + m.group(2), s, count=1)
-    # 건물 특성 블록은 본문에 녹였으므로 뺌
+    # 건물 특성 블록은 본문에 녹였으므로 뺌. 구 첫 화면은 보관 중인 역 목록·이웃 구 블록도 뺌
     s = re.sub(r'<section class="block block-building">.*?</section>', "", s, count=1, flags=re.S)
+    if not D:
+        s = re.sub(r'<section class="block block-stations">.*?</section>', "", s, count=1, flags=re.S)
+        s = re.sub(r'<section class="block "><div class="wrap"><h2 class="block-title">[^<]*근처 동네</h2>.*?</section>', "", s, count=1, flags=re.S)
+        s = re.sub(r'(<section class="block block-dongs"><div class="wrap"><h2 class="block-title">)[^<]*(</h2>)', r"\1동별 출장 안내\2", s, count=1)
     # 보험
     s = re.sub(r'(<section class="block block-ins"><div class="wrap"><h2 class="block-title">)[^<]*(</h2>)<p>.*?</p>',
                lambda m: m.group(1) + "누수 보험 처리" + m.group(2) + f"<p>{esc(fill(P['ins']))}</p>", s, count=1, flags=re.S)
@@ -59,13 +63,13 @@ def apply(page, P):
     i = s.index('<section class="callout">'); s = s[:i] + faq_html + s[i:]
     # 서비스: 동 이름 빼기
     s = re.sub(r'(<section class="block block-services"><div class="wrap"><h2 class="block-title">)[^<]*(</h2>)', r"\1함께 많이 찾는 서비스\2", s, count=1)
-    def svc(m): return re.sub(r"<strong>(?:\S+ )?%s ([^<]*)</strong>" % re.escape(D), r"<strong>\1</strong>", m.group(0))
+    def svc(m): return re.sub(r"<strong>(?:\S+ )?%s ([^<]*)</strong>" % re.escape(D or G[:-1]), r"<strong>\1</strong>", m.group(0))
     s = re.sub(r'<section class="block block-services">.*?</section>', svc, s, count=1, flags=re.S)
     # 지도 제목은 동 이름만
-    s = re.sub(r"<figcaption><strong>[^<]*주변 지도</strong>", f"<figcaption><strong>{D} 주변 지도</strong>", s, count=1)
+    if D: s = re.sub(r"<figcaption><strong>[^<]*주변 지도</strong>", f"<figcaption><strong>{D} 주변 지도</strong>", s, count=1)
     # 가까운 동네: 이름만, '…전체' 빼기
     def near(m):
-        body = re.sub(r"<span>[^<]*전체</span>", "", m.group(2)); body = body.replace(" 누수탐지</span>", "</span>")
+        body = re.sub(r"<(span|a)\b[^>]*>[^<]*전체</\1>", "", m.group(2)); body = body.replace(" 누수탐지</span>", "</span>").replace(" 누수탐지</a>", "</a>")
         return m.group(1) + body
     s = re.sub(r'(<section class="block "><div class="wrap"><h2 class="block-title">)[^<]*(</h2>.*?</section>)',
                lambda m: near(re.match(r"(.*?)(</h2>.*)", m.group(1) + "가까운 동네" + m.group(2), re.S)), s, count=1, flags=re.S)
@@ -93,10 +97,10 @@ ok = True
 texts = {}
 for page, P in PAGES.items():
     p, s = apply(page, P)
-    c = counts(main_text(s), P["S"], P["G"], P["D"]); texts[page] = main_text(s)
-    bad = {k: v for k, v in c.items() if not (TARGET[k][0] <= v <= TARGET[k][1])}
+    c = counts(main_text(s), P); texts[page] = main_text(s); T = targets(P)
+    bad = {k: v for k, v in c.items() if not (T[k][0] <= v <= T[k][1])}
     ok &= not bad
-    print(P["D"], " ".join(f"{k.replace('S',P['S'],1).replace('G',P['G'],1).replace('D',P['D'],1) if k not in ('누수탐지','누수') else k}:{v}" for k, v in c.items()), "| 글자", len(main_text(s)), "| 맞지 않음:", bad or "없음")
+    print(P["D"] or P["G"], " ".join(f"{label(k, P['S'], P['G'], P['D'])}:{v}" for k, v in c.items()), "| 글자", len(main_text(s)), "| 맞지 않음:", bad or "없음")
     if not CHECK: p.write_text(s, encoding="utf-8")
 
 # 페이지끼리 문장 겹침(15자 조각 기준)
@@ -105,5 +109,5 @@ names = list(texts)
 for i in range(len(names)):
     for j in range(i + 1, len(names)):
         a, b = grams(texts[names[i]]), grams(texts[names[j]])
-        print(f"겹침 {PAGES[names[i]]['D']}~{PAGES[names[j]]['D']}: {len(a & b) / min(len(a), len(b)) * 100:.0f}%")
+        print(f"겹침 {PAGES[names[i]]['D'] or PAGES[names[i]]['G']}~{PAGES[names[j]]['D'] or PAGES[names[j]]['G']}: {len(a & b) / min(len(a), len(b)) * 100:.0f}%")
 print("ALL OK" if ok else "NEEDS FIX")
