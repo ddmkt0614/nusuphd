@@ -110,4 +110,9 @@ for i in range(len(names)):
     for j in range(i + 1, len(names)):
         a, b = grams(texts[names[i]]), grams(texts[names[j]])
         print(f"겹침 {PAGES[names[i]]['D'] or PAGES[names[i]]['G']}~{PAGES[names[j]]['D'] or PAGES[names[j]]['G']}: {len(a & b) / min(len(a), len(b)) * 100:.0f}%")
+# 사진이 '이 동네 현장이 아님'이라고 스스로 밝히는 안내는 넣지 않는다(사장님 지시 2026-10-27). 사진 설명에 지역 이름도 넣지 않는다.
+NOT_HERE = ("다른 현장", "현장은 아닙니다", "현장이 아닙니다", "현장을 찍은 것은 아닙니다", "참고 사진")
+for f in [*pub.rglob("*.html"), *(pub.parent / "unpublished").rglob("*.html")]:
+    hit = [w for w in NOT_HERE if w in f.read_text(encoding="utf-8")]
+    if hit: ok = False; print("금지 문구", f, hit)
 print("ALL OK" if ok else "NEEDS FIX")

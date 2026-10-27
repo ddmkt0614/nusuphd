@@ -761,7 +761,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{o
 .footer-brand img{height:34px;width:auto;display:block}
 @media (max-width:520px){.brand img{height:26px}}
 
-/* 구·시 페이지 현장 사진(다른 현장 참고 사진, 페이지마다 다른 사진) */
+/* 구·시 페이지 현장 사진(페이지마다 다른 사진) */
 .field-photo{margin:0;max-width:880px}
 .field-photo img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--r-lg)}
 .field-photo figcaption{margin-top:10px;font-size:var(--fs-sm);color:var(--ink-3)}
