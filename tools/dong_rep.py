@@ -84,8 +84,16 @@ def link_hub(gu, dong, path):
         p.write_text(s[:m.start()] + hub + s[m.end():], encoding="utf-8")
     for p in (pub / "area" / "index.html", pub / "index.html"):
         s = p.read_text(encoding="utf-8")
-        if f'"{path}"]' in s: continue
-        s, n = re.subn(r"(var D=\[.*?)\];", lambda m: m.group(1) + json.dumps([dong, gu, path], ensure_ascii=False) + ", ];", s, count=1, flags=re.S)
+        if f'"{path}"]' not in s:
+            s, n = re.subn(r"(var D=\[.*?)\];", lambda m: m.group(1) + json.dumps([dong, gu, path], ensure_ascii=False) + ", ];", s, count=1, flags=re.S)
+            assert n == 1, p
+        # 서울 탭 카드 목록 끝에 한 장 더하고 탭 숫자(N곳)를 카드 수로 맞춘다(사장님 2026-10-28)
+        m = re.search(r'(<div class="region-grid dong-grid" data-panel="seoul"[^>]*>)(.*?)(</div>)', s, re.S); assert m, p
+        cards = m.group(2)
+        if f'href="{path}"' not in cards:
+            cards += f'<a href="{path}"><strong>서울 {gu} {dong} 누수탐지</strong></a>'
+            s = s[:m.start(2)] + cards + s[m.end(2):]
+        s, n = re.subn(r'(data-tab="seoul"[^>]*>서울 <small>)\d+(곳</small>)', lambda x: x.group(1) + str(cards.count("<a ")) + x.group(2), s, count=1)
         assert n == 1, p; p.write_text(s, encoding="utf-8")
 
 def add_sitemap(path):

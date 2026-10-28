@@ -61,6 +61,7 @@ for (const p of DONGS) {
   check(`/area/ → ${path} 링크`, area.includes(`href="${path}"`));
   check(`${path} sitemap(인코딩 주소)`, sitemap.includes(`<loc>${SITE}${encodeURI(path)}</loc>`) && !sitemap.includes(`<loc>${SITE}${path}</loc>`));
   check(`${path} 동네 검색 목록(홈·/area/)`, [area, home].every((x) => x.includes(`["${p.dong}", "${p.gu}", "${path}"]`)));
+  check(`${path} 서울 탭 카드(홈·/area/)`, [area, home].every((x) => x.includes(`<a href="${path}"><strong>서울 ${p.gu} ${p.dong} 누수탐지</strong></a>`)));
   // 사진: 파일 있음, 쪽 안에서 1번씩, 다른 쪽에 안 나옴, 설명에 지역 이름 없음
   const imgs = [...h.matchAll(/<img [^>]*src="(\/assets\/photo\/dong\/[^"]+)"[^>]*alt="([^"]*)"/g)].map((m) => ({ src: m[1], alt: m[2] }));
   check(`${path} 사진 7~9장`, imgs.length >= 7 && imgs.length <= 9, imgs.length);
