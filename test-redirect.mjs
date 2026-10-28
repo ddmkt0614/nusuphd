@@ -18,6 +18,10 @@ const cases = [
   ["http://www.nusuphd.com/area/seoul/jongno/gahoe-dong", 301, enc("/서울-종로구-가회동-누수탐지/")],
   ["https://nusuphd.com/area/seoul/gwangjin/hwayang-dong/index.html", 301, enc("/서울-광진구-화양동-누수탐지/")],
   ["https://nusuphd.com/area/seoul/gwangjin/hwayang-dong/?q=1", 301, enc("/서울-광진구-화양동-누수탐지/") + "?q=1"],
+  // 동 대표 쪽(2026-10-28): 옛 영문 주소 → /{구}-{동}-누수탐지/, 보관 상세 주소는 그대로 404
+  ["https://nusuphd.com/area/seoul/jungnang/junghwa-dong/", 301, enc("/중랑구-중화동-누수탐지/")],
+  ["http://www.nusuphd.com/area/seoul/dobong/banghak-dong", 301, enc("/도봉구-방학동-누수탐지/")],
+  ["https://nusuphd.com/" + encodeURI("서울-중랑구-중화동-누수탐지") + "/", 200, null],
   // 아직 보관 중인 페이지의 옛 주소는 옮기지 않음(정적 파일 → 404 페이지)
   ["https://nusuphd.com/area/seoul/jongno/", 200, null],
   ["https://nusuphd.com/station/gangnam-station/", 200, null],
