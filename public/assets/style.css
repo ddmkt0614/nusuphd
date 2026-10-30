@@ -217,6 +217,7 @@ p{margin:0 0 .9em}
 .hub{padding-block:16px;border-top:1px solid var(--line)}
 .hub h3{font-size:var(--step-1);margin-bottom:10px}
 .hub h3 a{text-decoration:none;color:var(--ink)}
+.hub-line{margin-top:8px;font-size:.92rem;line-height:1.6}
 .more-link{margin:12px 0 0}
 .more-link a{font-weight:700;color:var(--main-text);text-underline-offset:3px}
 

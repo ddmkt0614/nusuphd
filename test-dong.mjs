@@ -4,13 +4,18 @@ import { join } from "node:path";
 
 const PUB = "public";
 const SITE = "https://nusuphd.com";
-// 동 대표 쪽과 같은 동의 보관 상세(열지 않는다 — 열면 같은 검색어로 서로 다툼)
+// hold: 같은 법정동의 보관 상세(열지 않는다 — 열면 같은 검색어로 서로 다툼). legal: 행정동 쪽의 법정동. photos: 사진 수 범위.
+// hubLine: /area/ 구 칸에 칩 대신 '이름+한 줄+링크'로 붙은 쪽(행정동 이름은 칩에 없음)
 const DONGS = [
   { gu: "중랑구", dong: "중화동", hold: "/서울-중랑구-중화동-누수탐지/" },
   { gu: "도봉구", dong: "방학동", hold: "/서울-도봉구-방학동-누수탐지/" },
 ];
 const NOT_HERE = ["다른 현장", "현장은 아닙니다", "현장이 아닙니다", "현장을 찍은 것은 아닙니다", "참고 사진"];
-const REGION_ALL = [...new Set(DONGS.flatMap((p) => [p.gu, p.dong, p.gu.replace(/구$/, ""), p.dong.replace(/동$/, "")])), "서울"];
+const BANNED = ["최고", "1위", "완벽", "하수구", "막힘"];
+const OTHER_SITES = ["justnusu.com", "ddnusu.com", "smartnusu.com"];
+// 한 글자 어간('창동' → '창')은 일반 낱말과 겹쳐 빼고, 행정동 쪽은 법정동 이름도 막는다
+const stem = (d) => d.replace(/동$/, "");
+const REGION_ALL = [...new Set(DONGS.flatMap((p) => [p.gu, p.dong, p.gu.replace(/구$/, ""), ...(p.legal ? [p.legal] : []), ...[p.dong, p.legal].filter(Boolean).map(stem).filter((s) => s.length >= 2)])), "서울"];
 
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
 const files = walk(PUB);
@@ -56,6 +61,12 @@ for (const p of DONGS) {
   const canon = (h.match(/<link rel="canonical" href="([^"]+)"/) || [])[1];
   check(`${path} canonical·og:url`, canon === SITE + encodeURI(path) && meta(h, "og:url") === canon, canon);
   check(`${path} 금지 문구 없음`, !NOT_HERE.some((w) => h.includes(w)));
+  check(`${path} 본문 금지어 없음`, !BANNED.some((w) => body.includes(w)), BANNED.filter((w) => body.includes(w)).join(","));
+  if (p.hubLine) {
+    const line = (area.match(new RegExp(`<p class="hub-line"><a href="${path}">${p.dong} 누수탐지</a> ([^<]+)</p>`)) || [])[1];
+    check(`/area/ 구 칸에 ${p.dong} 이름+한 줄+링크`, !!line);
+    check(`${path} 구 칸 한 줄이 본문과 다름`, line && !body.includes(line.trim()));
+  }
   // 지역 안내(/area/) 양방향
   check(`${path} → /area/ 링크(본문 안)`, mainOf(h).includes('href="/area/"'));
   check(`/area/ → ${path} 링크`, area.includes(`href="${path}"`));
@@ -64,7 +75,8 @@ for (const p of DONGS) {
   check(`${path} 서울 탭 카드(홈·/area/)`, [area, home].every((x) => x.includes(`<a href="${path}"><strong>서울 ${p.gu} ${p.dong} 누수탐지</strong></a>`)));
   // 사진: 파일 있음, 쪽 안에서 1번씩, 다른 쪽에 안 나옴, 설명에 지역 이름 없음
   const imgs = [...h.matchAll(/<img [^>]*src="(\/assets\/photo\/dong\/[^"]+)"[^>]*alt="([^"]*)"/g)].map((m) => ({ src: m[1], alt: m[2] }));
-  check(`${path} 사진 7~9장`, imgs.length >= 7 && imgs.length <= 9, imgs.length);
+  const [lo, hi] = p.photos || [7, 9];
+  check(`${path} 사진 ${lo}~${hi}장`, imgs.length >= lo && imgs.length <= hi, imgs.length);
   check(`${path} 사진 파일 있음`, imgs.every((x) => existsSync(join(PUB, x.src))));
   check(`${path} 사진 쪽 안에서 1번씩`, new Set(imgs.map((x) => x.src)).size === imgs.length);
   const elsewhere = htmls.filter((g) => g !== f && imgs.some((x) => read(g).includes(x.src)));
@@ -77,6 +89,10 @@ for (const p of DONGS) {
   const leak = files.filter((g) => /\.(html|xml|txt)$/.test(g)).filter((g) => { const s = read(g); return s.includes(p.hold) || s.includes(encodeURI(p.hold)); });
   check(`${p.hold} 공개 파일에 링크 없음`, leak.length === 0, leak.join(","));
 }
+
+// 다른 세 사이트로 가는 링크 없음(서로 링크하지 않는다)
+const toOthers = htmls.filter((g) => OTHER_SITES.some((d) => read(g).includes(d)));
+check("공개 html 에 다른 세 사이트 주소 없음", toOthers.length === 0, toOthers.join(","));
 
 // 문장 겹침: 동 대표 쪽끼리, 그리고 공개된 동 상세와 15자 조각 25% 미만
 const mine = DONGS.filter((p) => existsSync(pageOf(p))).map((p) => [pathOf(p), text(read(pageOf(p)))]);

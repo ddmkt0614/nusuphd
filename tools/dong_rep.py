@@ -5,7 +5,7 @@
 지역 안내는 /area/ 허브: 그 구 칩을 링크로 바꾸고(양방향), sitemap 에 한 줄 더한다. 다른 쪽은 건드리지 않는다."""
 import sys, re, json, html, pathlib
 from urllib.parse import quote
-sys.stdout.reconfigure(encoding="utf-8")
+sys.stdout.reconfigure(encoding="utf-8"); sys.stderr.reconfigure(encoding="utf-8")
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from dong_rep_data import PAGES
 
@@ -22,8 +22,9 @@ def img(p, cls="", lazy=True):
             + (' loading="lazy" decoding="async"' if lazy else ' fetchpriority="high"') + ">")
 
 def build(P):
-    gu, dong = P["gu"], P["dong"]
+    gu, dong, date = P["gu"], P["dong"], P.get("date", LASTMOD)
     name = f"{gu} {dong} 누수탐지"; path = f"/{gu}-{dong}-누수탐지/"; url = SITE + quote(path)
+    B = P.get("buildings")                                          # 두 번째 묶음부터는 없음(동 소개·작업 순서·방문·FAQ 만)
     title = f"{name} {P['headline']} | 누수박사"
     main = (
         '<section class="hero hero-place"><div class="wrap hero-grid">\n'
@@ -34,19 +35,20 @@ def build(P):
         f'<section class="summary"><div class="wrap"><p class="summary-label">한눈에 보기</p><p class="summary-text">{e(P["intro"])}</p></div></section>'
         f'<section class="block block-article"><div class="wrap article-body"><h2>{e(P["about_title"])}</h2>'
         + "".join(f"<p>{e(x)}</p>" for x in P["about"]) + "</div></section>"
-        f'<section class="block block-steps"><div class="wrap"><h2 class="block-title">{e(P["buildings"]["title"])}</h2><p class="lead">{e(P["buildings"]["lead"])}</p><ol class="steps">'
-        + "".join(f"<li><span><strong>{e(t)}</strong> {e(d)}</span></li>" for t, d in P["buildings"]["items"]) + "</ol></div></section>"
-        f'<section class="block block-signs"><div class="wrap"><h2 class="block-title">방문 전 확인할 것</h2><ul class="signs">'
+        + (f'<section class="block block-steps"><div class="wrap"><h2 class="block-title">{e(B["title"])}</h2><p class="lead">{e(B["lead"])}</p><ol class="steps">'
+           + "".join(f"<li><span><strong>{e(t)}</strong> {e(d)}</span></li>" for t, d in B["items"]) + "</ol></div></section>" if B else "")
+        + f'<section class="block block-signs"><div class="wrap"><h2 class="block-title">방문 전 확인할 것</h2><ul class="signs">'
         + "".join(f"<li>{e(x)}</li>" for x in P["visit"]) + "</ul></div></section>"
         f'<section class="block block-cases"><div class="wrap"><h2 class="block-title">작업 과정</h2><p class="lead">{e(P["work"]["lead"])}</p><p class="lead">{e(P["work"]["outro"])}</p><div class="case-grid">'
         + "".join(f'<figure>{img(s)}<figcaption><strong>{e(s["title"])}</strong> {e(s["text"])}</figcaption></figure>' for s in P["work"]["steps"])
         + '</div></div></section>\n'
         f'<section class="block block-faq"><div class="wrap"><h2 class="block-title">자주 묻는 질문</h2><div class="faq">'
         + "".join(f"<details><summary>{e(q)}</summary><p>{e(x)}</p></details>" for q, x in P["faq"]) + "</div></div></section>"
-        f'<section class="block "><div class="wrap"><h2 class="block-title">가까운 동네</h2><p class="chips ">'
-        + "".join(f"<span>{e(x)}</span>" for x in P["near"])
-        + f'</p><p class="more-link"><a href="/area/">서울·경기 출장 지역 전체 보기</a></p></div></section>'
-        f'<section class="callout"><div class="wrap"><h2>{e(P["callout"])}</h2><p>{e(P["callout_text"])}</p><a class="btn-call" href="tel:{TEL}">{TEL_TXT}</a></div></section>\n'
+        + (f'<section class="block "><div class="wrap"><h2 class="block-title">가까운 동네</h2><p class="chips ">'
+           + "".join(f"<span>{e(x)}</span>" for x in P["near"])
+           + f'</p><p class="more-link"><a href="/area/">서울·경기 출장 지역 전체 보기</a></p></div></section>' if P.get("near")
+           else '<section class="block "><div class="wrap"><p class="more-link"><a href="/area/">서울·경기 출장 지역 전체 보기</a></p></div></section>')
+        + f'<section class="callout"><div class="wrap"><h2>{e(P["callout"])}</h2><p>{e(P["callout_text"])}</p><a class="btn-call" href="tel:{TEL}">{TEL_TXT}</a></div></section>\n'
     )
     s = TPL
     s = re.sub(r"<title>[^<]*</title>", f"<title>{e(title)}</title>", s, count=1)
@@ -58,7 +60,7 @@ def build(P):
     base = [x for x in g if x["@type"] in ("Plumber", "WebSite")]; assert len(base) == 2
     graph = [*base,
              {"@type": "WebPage", "@id": url, "url": url, "name": title, "description": P["description"], "isPartOf": {"@id": f"{SITE}/#website"},
-              "about": {"@id": f"{SITE}/#business"}, "dateModified": LASTMOD, "inLanguage": "ko-KR",
+              "about": {"@id": f"{SITE}/#business"}, "dateModified": date, "inLanguage": "ko-KR",
               "primaryImageOfPage": {"@type": "ImageObject", "url": f'{SITE}/assets/photo/dong/{P["hero"]["file"]}.webp', "width": 1000, "height": 750}},
              {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "홈", "item": f"{SITE}/"},
                                                              {"@type": "ListItem", "position": 2, "name": "출장 지역", "item": f"{SITE}/area/"},
@@ -74,13 +76,21 @@ def build(P):
     out = pub / f"{gu}-{dong}-누수탐지" / "index.html"; out.parent.mkdir(exist_ok=True); out.write_text(s, encoding="utf-8")
     return path
 
-def link_hub(gu, dong, path):
-    """/area/ 허브의 그 구 칩(span)을 링크로(화면 변화는 이 칩 하나). 홈·/area/ 동네 검색 목록(var D, 칠 때만 보임)에도 넣는다."""
+def hub_block(s, gu):
+    short = gu if len(gu) == 2 else gu[:-1]                         # 허브 제목: 중랑구 → 중랑누수탐지, 중구 → 중구누수탐지
+    return re.search(rf'<h3><span>{short}누수탐지</span></h3><p class="chips chips-dense">.*?</p>(?:<p class="hub-line">.*?</p>)*', s, re.S)
+
+def link_hub(P, path):
+    """/area/ 허브의 그 구 칸. 법정동 쪽은 그 칩(span)을 링크로, 행정동 쪽(칩에 이름이 없음)은 칩 아래에 '이름+한 줄+링크'를 더한다.
+    홈·/area/ 동네 검색 목록(var D, 칠 때만 보임)과 서울 탭 카드에도 넣는다."""
+    gu, dong = P["gu"], P["dong"]
     p = pub / "area" / "index.html"; s = p.read_text(encoding="utf-8")
     if f'href="{path}"' not in s:
-        short = gu if len(gu) == 2 else gu[:-1]                     # 허브 제목: 중랑구 → 중랑누수탐지, 중구 → 중구누수탐지
-        m = re.search(rf'<h3><span>{short}누수탐지</span></h3><p class="chips chips-dense">.*?</p>', s, re.S); assert m, gu
-        hub, n = re.subn(rf"<span>{dong}</span>", f'<a href="{path}">{dong}</a>', m.group(0), count=1); assert n == 1, dong
+        m = hub_block(s, gu)
+        if P.get("hub_line"):
+            hub = m.group(0) + f'<p class="hub-line"><a href="{path}">{e(dong)} 누수탐지</a> {e(P["hub_line"])}</p>'
+        else:
+            hub, n = re.subn(rf"<span>{dong}</span>", f'<a href="{path}">{dong}</a>', m.group(0), count=1); assert n == 1, dong
         p.write_text(s[:m.start()] + hub + s[m.end():], encoding="utf-8")
     for p in (pub / "area" / "index.html", pub / "index.html"):
         s = p.read_text(encoding="utf-8")
@@ -96,12 +106,18 @@ def link_hub(gu, dong, path):
         s, n = re.subn(r'(data-tab="seoul"[^>]*>서울 <small>)\d+(곳</small>)', lambda x: x.group(1) + str(cards.count("<a ")) + x.group(2), s, count=1)
         assert n == 1, p; p.write_text(s, encoding="utf-8")
 
-def add_sitemap(path):
+def add_sitemap(path, date):
     p = pub / "sitemap.xml"; s = p.read_text(encoding="utf-8"); loc = f"<loc>{SITE}{quote(path)}</loc>"
     if loc in s: return
-    line = f"<url>{loc}<lastmod>{LASTMOD}</lastmod><priority>0.6</priority></url>\n"
+    line = f"<url>{loc}<lastmod>{date}</lastmod><priority>0.6</priority></url>\n"
     i = s.index(f"<url><loc>{SITE}/faq/</loc>"); p.write_text(s[:i] + line + s[i:], encoding="utf-8")
 
+# 쓰기 전에 모든 쪽의 허브 칸을 먼저 확인한다(중간에 멈추면 반쯤 쓴 public 이 남으므로)
+_area = (pub / "area" / "index.html").read_text(encoding="utf-8")
 for P in PAGES:
-    path = build(P); link_hub(P["gu"], P["dong"], path); add_sitemap(path)
+    m = hub_block(_area, P["gu"]); assert m, P["gu"]
+    assert P.get("hub_line") or f"<span>{P['dong']}</span>" in m.group(0) or f'href="/{P["gu"]}-{P["dong"]}-누수탐지/"' in m.group(0), P["dong"]
+
+for P in PAGES:
+    path = build(P); link_hub(P, path); add_sitemap(path, P.get("date", LASTMOD))
     print("built", path)
