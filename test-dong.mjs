@@ -9,6 +9,8 @@ const SITE = "https://nusuphd.com";
 const DONGS = [
   { gu: "중랑구", dong: "중화동", hold: "/서울-중랑구-중화동-누수탐지/" },
   { gu: "도봉구", dong: "방학동", hold: "/서울-도봉구-방학동-누수탐지/" },
+  { gu: "중랑구", dong: "묵1동", legal: "묵동", hold: "/서울-중랑구-묵동-누수탐지/", photos: [3, 5], hubLine: true },
+  { gu: "도봉구", dong: "창1동", legal: "창동", hold: "/서울-도봉구-창동-누수탐지/", photos: [3, 5], hubLine: true },
 ];
 const NOT_HERE = ["다른 현장", "현장은 아닙니다", "현장이 아닙니다", "현장을 찍은 것은 아닙니다", "참고 사진"];
 const BANNED = ["최고", "1위", "완벽", "하수구", "막힘"];
