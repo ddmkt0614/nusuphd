@@ -5,12 +5,13 @@ import { join } from "node:path";
 const PUB = "public";
 const SITE = "https://nusuphd.com";
 // hold: 같은 법정동의 보관 상세(열지 않는다 — 열면 같은 검색어로 서로 다툼). legal: 행정동 쪽의 법정동. photos: 사진 수 범위.
-// hubLine: /area/ 구 칸에 칩 대신 '이름+한 줄+링크'로 붙은 쪽(행정동 이름은 칩에 없음)
+// alias: 동네 검색에서 이 이름(법정동)으로 쳐도 이 쪽이 나와야 한다. hubLine: /area/ 구 칸에 칩 대신 '이름+한 줄+링크'로 붙은 쪽(행정동 이름은 칩에 없음)
 const DONGS = [
   { gu: "중랑구", dong: "중화동", hold: "/서울-중랑구-중화동-누수탐지/" },
   { gu: "도봉구", dong: "방학동", hold: "/서울-도봉구-방학동-누수탐지/" },
   { gu: "중랑구", dong: "묵1동", legal: "묵동", hold: "/서울-중랑구-묵동-누수탐지/", photos: [3, 5], hubLine: true },
   { gu: "도봉구", dong: "창1동", legal: "창동", hold: "/서울-도봉구-창동-누수탐지/", photos: [3, 5], hubLine: true },
+  { gu: "중랑구", dong: "망우본동", legal: "망우동", hold: "/서울-중랑구-망우동-누수탐지/", photos: [3, 5], hubLine: true, alias: "망우동" },
 ];
 const NOT_HERE = ["다른 현장", "현장은 아닙니다", "현장이 아닙니다", "현장을 찍은 것은 아닙니다", "참고 사진"];
 const BANNED = ["최고", "1위", "완벽", "하수구", "막힘"];
@@ -74,6 +75,7 @@ for (const p of DONGS) {
   check(`/area/ → ${path} 링크`, area.includes(`href="${path}"`));
   check(`${path} sitemap(인코딩 주소)`, sitemap.includes(`<loc>${SITE}${encodeURI(path)}</loc>`) && !sitemap.includes(`<loc>${SITE}${path}</loc>`));
   check(`${path} 동네 검색 목록(홈·/area/)`, [area, home].every((x) => x.includes(`["${p.dong}", "${p.gu}", "${path}"]`)));
+  if (p.alias) check(`${path} 동네 검색 별칭 '${p.alias}'(홈·/area/)`, [area, home].every((x) => x.includes(`["${p.alias}", "${p.gu}", "${path}"]`)));
   check(`${path} 서울 탭 카드(홈·/area/)`, [area, home].every((x) => x.includes(`<a href="${path}"><strong>서울 ${p.gu} ${p.dong} 누수탐지</strong></a>`)));
   // 사진: 파일 있음, 쪽 안에서 1번씩, 다른 쪽에 안 나옴, 설명에 지역 이름 없음
   const imgs = [...h.matchAll(/<img [^>]*src="(\/assets\/photo\/dong\/[^"]+)"[^>]*alt="([^"]*)"/g)].map((m) => ({ src: m[1], alt: m[2] }));

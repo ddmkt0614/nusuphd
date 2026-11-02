@@ -94,9 +94,10 @@ def link_hub(P, path):
         p.write_text(s[:m.start()] + hub + s[m.end():], encoding="utf-8")
     for p in (pub / "area" / "index.html", pub / "index.html"):
         s = p.read_text(encoding="utf-8")
-        if f'"{path}"]' not in s:
-            s, n = re.subn(r"(var D=\[.*?)\];", lambda m: m.group(1) + json.dumps([dong, gu, path], ensure_ascii=False) + ", ];", s, count=1, flags=re.S)
-            assert n == 1, p
+        for nm in [dong] + ([P["find_alias"]] if P.get("find_alias") else []):   # find_alias: 법정동 이름으로 쳐도 찾게
+            if json.dumps([nm, gu, path], ensure_ascii=False) not in s:
+                s, n = re.subn(r"(var D=\[.*?)\];", lambda m: m.group(1) + json.dumps([nm, gu, path], ensure_ascii=False) + ", ];", s, count=1, flags=re.S)
+                assert n == 1, p
         # 서울 탭 카드 목록 끝에 한 장 더하고 탭 숫자(N곳)를 카드 수로 맞춘다(사장님 2026-10-28)
         m = re.search(r'(<div class="region-grid dong-grid" data-panel="seoul"[^>]*>)(.*?)(</div>)', s, re.S); assert m, p
         cards = m.group(2)
