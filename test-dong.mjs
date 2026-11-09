@@ -13,6 +13,7 @@ const DONGS = [
   { gu: "도봉구", dong: "창1동", legal: "창동", hold: "/서울-도봉구-창동-누수탐지/", photos: [3, 5], hubLine: true },
   { gu: "중랑구", dong: "망우본동", legal: "망우동", hold: "/서울-중랑구-망우동-누수탐지/", photos: [3, 5], hubLine: true, alias: "망우동" },
   { gu: "도봉구", dong: "창4동", legal: "창동", hold: "/서울-도봉구-창동-누수탐지/", photos: [3, 5], hubLine: true },
+  { gu: "도봉구", dong: "쌍문동", hold: "/서울-도봉구-쌍문동-누수탐지/", photos: [3, 5] },
 ];
 const NOT_HERE = ["다른 현장", "현장은 아닙니다", "현장이 아닙니다", "현장을 찍은 것은 아닙니다", "참고 사진"];
 const BANNED = ["최고", "1위", "완벽", "하수구", "막힘"];
@@ -71,6 +72,7 @@ for (const p of DONGS) {
     check(`/area/ 구 칸에 ${p.dong} 이름+한 줄+링크`, !!line);
     check(`${path} 구 칸 한 줄이 본문과 다름`, line && !body.includes(line.trim()));
   }
+  if (!p.hubLine) check(`/area/ 구 칸 칩 '${p.dong}' 이 링크`, area.includes(`<a href="${path}">${p.dong}</a>`) && !area.includes(`<span>${p.dong}</span>`));
   // 지역 안내(/area/) 양방향
   check(`${path} → /area/ 링크(본문 안)`, mainOf(h).includes('href="/area/"'));
   check(`/area/ → ${path} 링크`, area.includes(`href="${path}"`));
